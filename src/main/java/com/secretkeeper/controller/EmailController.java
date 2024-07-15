@@ -14,26 +14,27 @@ import java.util.List;
 public class EmailController {
     @Autowired
     private EmailDetailService service;
+
     @GetMapping("/{userId}")
     public ResponseEntity<List<EmailRequest>> getAllEmailDetail(@PathVariable("userId") Integer userId) {
 
         return ResponseEntity.status(HttpStatus.OK).body(service.getAllEmailDetail(userId));
     }
 
-    @GetMapping("/{userId}/{emailId}")
-    public String getUniqueEmailDetail(@PathVariable("userId") Integer userId, @PathVariable("emailId") Integer emailId) {
-        return "heheh";
+    @GetMapping("/detail/{emailId}")
+    public ResponseEntity<EmailRequest> getUniqueEmailDetail(@PathVariable("emailId") Integer emailId) {
+        return ResponseEntity.status(HttpStatus.OK).body(service.getEmailDetail(emailId));
     }
 
     @PostMapping("/{customerId}")
     public ResponseEntity<String> saveEmailDetail(@RequestBody EmailRequest request, @PathVariable("customerId") Integer id) {
-        service.saveEmailDetail(request, id)
+        service.saveEmailDetail(request, id);
         return ResponseEntity.status(HttpStatus.CREATED).body("You Detail is saved Successfully!! , Thanks for you Trust.");
     }
 
-    @PutMapping
-    public String updateEmailDetail() {
-        return "update";
+    @PutMapping("/{emailId}")
+    public ResponseEntity<EmailRequest> updateEmailDetail(@PathVariable("emailId") Integer id, @RequestBody EmailRequest request) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED).body(service.updateEmailDetail(id, request));
     }
 
     @DeleteMapping("/{emailId}")

@@ -10,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 public class EmailDetailService {
@@ -41,6 +42,7 @@ public class EmailDetailService {
         List<EmailDetails> emailDetailsList = repository.findByCustomerId(id);
         emailDetailsList.forEach(details -> {
             EmailRequest request = new EmailRequest();
+            request.setId(details.getId());
             request.setEmailId(details.getEmailId());
             request.setPwd(EncryptionUtil.decrypt(details.getPassword(), details.getKey().getEncryptionKey()));
             request.setUserName(details.getUserName());
@@ -49,8 +51,43 @@ public class EmailDetailService {
         return response;
     }
 
+    public EmailRequest getEmailDetail(Integer id) {
+        EmailRequest response = new EmailRequest();
+        Optional<EmailDetails> emailDetail = repository.findById(id);
+        if (emailDetail.isPresent()) {
+            EmailDetails details = emailDetail.get();
+            response.setId(details.getId());
+            response.setEmailId(details.getEmailId());
+            response.setPwd(EncryptionUtil.decrypt(details.getPassword(), details.getKey().getEncryptionKey()));
+            response.setUserName(details.getUserName());
+        }
+        return response;
+    }
+
     public String deleteEmailData(Integer emailId) {
         repository.deleteById(emailId);
         return "Email Detail deleted successfully !!";
+    }
+
+    public EmailRequest updateEmailDetail(Integer emailId, EmailRequest request) {
+
+        EmailDetails emailDetailById = repository.getById(emailId);
+        String secretKey = EncryptionUtil.generateKey();
+        String encryptPwd = EncryptionUtil.encrypt(request.getPwd(), secretKey);
+        EncryptionKey updatedKey = emailDetailById.getKey();
+        updatedKey.setEncryptionKey(secretKey);
+        updatedKey.setEmailDetails(emailDetailById);
+        emailDetailById.setEmailId(request.getEmailId());
+        emailDetailById.setKey(updatedKey);
+        emailDetailById.setUserName(request.getUserName());
+        emailDetailById.setPassword(encryptPwd);
+        try {
+            EmailDetails response = repository.save(emailDetailById);
+            return new EmailRequest(response.getId(), response.getEmailId(), request.getPwd(), response.getUserName());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+
+        return null;
     }
 }
